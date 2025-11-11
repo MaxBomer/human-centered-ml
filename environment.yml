@@ -1,4 +1,4 @@
-name: deepAL2
+name: deepAL
 channels:
   - pytorch
   - defaults
