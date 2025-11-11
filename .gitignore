@@ -1,0 +1,15 @@
+data/*
+
+logfile/*
+
+job_scripts/out/*
+
+data/*
+\!data/.gitkeep
+
+logfile/*
+\!logfile/.gitkeep
+
+job_scripts/out/*
+\!job_scripts/out/.gitkeep
+

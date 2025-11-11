@@ -41,6 +41,9 @@ torch.backends.cudnn.benchmark= True
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
+# make sure logfile directory exists
+os.makedirs(os.path.abspath('') + '/logfile', exist_ok=True)
+
 #recording
 sys.stdout = Logger(os.path.abspath('') + '/logfile/' + DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_normal_log.txt')
 warnings.filterwarnings('ignore')
@@ -136,6 +139,10 @@ while (iteration > 0):
 	model_path = './modelpara/'+timestamp + DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota)  +'.params'
 	end = datetime.datetime.now()
 	acq_time.append(round(float((end-start).seconds),3))
+
+	# make sure modelpara directory exists
+	os.makedirs(os.path.abspath('') + '/modelpara', exist_ok=True)
+	
 	torch.save(strategy.get_model().state_dict(), model_path)
 	
 # cal mean & standard deviation

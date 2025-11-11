@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=RunDemo
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=20:00:00
+#SBATCH --output=./job_scripts/out/run_demo_%A.out
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate deepAL
+
+python - <<'EOF'
+import torch
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"GPU device count: {torch.cuda.device_count()}")
+    print(f"Active GPU: {torch.cuda.get_device_name(0)}")
+EOF
+echo ""
+
+# Run the actual experiment
+python demo.py \
+      -a RandomSampling \
+      -s 100 \
+      -q 1000 \
+      -b 100 \
+      -d MNIST \
+      --seed 4666 \
+      -t 3 \
+      -g 0

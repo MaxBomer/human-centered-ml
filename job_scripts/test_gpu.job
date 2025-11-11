@@ -1,0 +1,40 @@
+#!/bin/bash
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=TestGPU
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --time=00:05:00
+#SBATCH --output=./job_scripts/out/test_gpu_%A.out
+
+# Load modules
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+# Activate your environment (adjust name if needed)
+source activate deepAL
+
+# Fix GPU usage
+#pip install --upgrade torch==1.10.2 torchvision==0.11.3 torchaudio==0.10.2 --extra-index-url https://download.pytorch.org/whl/cu113
+
+# Print environment info
+echo "=== GPU TEST JOB ==="
+echo "Running on node: $(hostname)"
+echo "Date: $(date)"
+echo "--------------------"
+
+# Run a small Python test to check GPU availability
+python - <<'EOF'
+import torch
+print("PyTorch version:", torch.__version__)
+print("CUDA available:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("GPU count:", torch.cuda.device_count())
+    for i in range(torch.cuda.device_count()):
+        print(f"Device {i}: {torch.cuda.get_device_name(i)}")
+        print(f"  Memory Allocated: {torch.cuda.memory_allocated(i)/1e6:.2f} MB")
+        print(f"  Memory Cached: {torch.cuda.memory_reserved(i)/1e6:.2f} MB")
+else:
+    print("No GPU detected.")
+EOF
