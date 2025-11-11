@@ -23,12 +23,11 @@ if torch.cuda.is_available():
 EOF
 echo ""
 
-# Run the actual experiment
 python demo.py \
       -a RandomSampling \
-      -s 100 \
-      -q 1000 \
-      -b 100 \
+      -s 500 \
+      -q 10000 \
+      -b 250 \
       -d MNIST \
       --seed 4666 \
       -t 3 \
