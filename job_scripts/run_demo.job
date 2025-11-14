@@ -5,7 +5,7 @@
 #SBATCH --job-name=RunDemo
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
-#SBATCH --time=20:00:00
+#SBATCH --time=24:00:00
 #SBATCH --output=./job_scripts/out/run_demo_%A.out
 
 module purge
@@ -23,12 +23,23 @@ if torch.cuda.is_available():
 EOF
 echo ""
 
-python demo.py \
-      -a RandomSampling \
-      -s 500 \
-      -q 10000 \
-      -b 250 \
-      -d MNIST \
-      --seed 4666 \
-      -t 3 \
-      -g 0
+
+# MNIST
+#echo "MNIST: RandomSampling"
+#python demo.py -a RandomSampling -s 500 -q 10000 -b 250 -d MNIST --seed 4666 -t 3 -g 0
+#
+#echo "MNIST: EntropySampling"
+#python demo.py -a EntropySampling -s 500 -q 10000 -b 250 -d MNIST --seed 4666 -t 3 -g 0
+#
+#echo "MNIST: KCenterGreedy"
+#python demo.py -a KCenterGreedy -s 500 -q 10000 -b 250 -d MNIST --seed 4666 -t 3 -g 0
+#
+## CIFAR-10
+#echo "CIFAR10: RandomSampling"
+#python demo.py -a RandomSampling -s 1000 -q 40000 -b 500 -d CIFAR10 --seed 4666 -t 3 -g 0
+
+#echo "CIFAR10: EntropySampling"
+#python demo.py -a EntropySampling -s 1000 -q 40000 -b 500 -d CIFAR10 --seed 4666 -t 3 -g 0
+
+echo "CIFAR10: KCenterGreedy"
+python demo.py -a KCenterGreedy -s 1000 -q 40000 -b 500 -d CIFAR10 --seed 4666 -t 1 -g 0
