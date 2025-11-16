@@ -44,6 +44,17 @@ def get_args() -> argparse.Namespace:
 	parser.add_argument('--num_vae_steps', type=int, default=2, help='Number of VAE steps taken for every task model step')
 	parser.add_argument('--adversary_param', type=float, default=1, help='Hyperparameter for training. lambda2 in the paper')
 
+	# input noise configuration
+	parser.add_argument('--input_noise_type', type=str, default='none',
+						choices=['none', 'gaussian', 'uniform', 'poisson'],
+						help='Type of noise to permanently apply to a subset of training samples.')
+	parser.add_argument('--input_noise_fraction', type=float, default=0.0,
+						help='Fraction (0-1) of training samples to corrupt permanently.')
+	parser.add_argument('--input_noise_strength', type=float, default=0.1,
+						help='Noise strength parameter (e.g., std dev) used when corrupting samples.')
+	parser.add_argument('--input_noise_seed', type=int, default=4666,
+						help='Random seed used when selecting which samples to corrupt.')
+
 	
 	args = parser.parse_args()
 	return args

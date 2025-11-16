@@ -26,6 +26,16 @@ NUM_ROUND = int(args_input.quota / args_input.batch)
 DATA_NAME = args_input.dataset_name
 STRATEGY_NAME = args_input.ALstrategy
 
+noise_fraction = max(0.0, min(1.0, args_input.input_noise_fraction))
+noise_cfg = None
+if args_input.input_noise_type != 'none' and noise_fraction > 0.0:
+	noise_cfg = {
+		'type': args_input.input_noise_type,
+		'fraction': noise_fraction,
+		'strength': args_input.input_noise_strength,
+		'seed': args_input.input_noise_seed
+	}
+
 
 SEED: int = args_input.seed  # type: ignore[assignment]  # Override final for runtime
 os.environ['TORCH_HOME']='./basicmodel'
@@ -61,7 +71,7 @@ while (iteration > 0):
 
 	# data, network, strategy
 	args_task = args_pool[DATA_NAME]
-	dataset = get_dataset(args_input.dataset_name, args_task)				# load dataset
+	dataset = get_dataset(args_input.dataset_name, args_task, noise_cfg=noise_cfg)				# load dataset
 	if args_input.ALstrategy == 'LossPredictionLoss':
 		net = get_net_lpl(args_input.dataset_name, args_task, device)		# load network
 	elif args_input.ALstrategy == 'WAAL':

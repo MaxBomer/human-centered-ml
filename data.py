@@ -80,7 +80,74 @@ class Data:
     def cal_test_acc(self, preds: torch.Tensor) -> float:
         return 1.0 * (self.Y_test==preds).sum().item() / self.n_test
 
+    def apply_permanent_input_noise(self, noise_cfg: dict[str, Any] | None, corrupt_test: bool = False) -> None:
+        if noise_cfg is None:
+            return
+        self.X_train = apply_input_noise(self.X_train, noise_cfg)
+        if corrupt_test:
+            self.X_test = apply_input_noise(self.X_test, noise_cfg)
+
     
+def apply_input_noise(
+    data_array: torch.Tensor | np.ndarray,
+    noise_cfg: dict[str, Any]
+) -> torch.Tensor | np.ndarray:
+    noise_type = noise_cfg.get('type', 'none')
+    noise_fraction = float(noise_cfg.get('fraction', 0.0))
+    noise_strength = float(noise_cfg.get('strength', 0.0))
+    noise_seed = int(noise_cfg.get('seed', 4666))
+
+    if noise_type == 'none' or noise_fraction <= 0.0 or noise_strength <= 0.0:
+        return data_array
+
+    if isinstance(data_array, torch.Tensor):
+        np_data = data_array.clone().cpu().numpy()
+        as_tensor = True
+        torch_dtype = data_array.dtype
+    else:
+        np_data = np.array(data_array, copy=True)
+        as_tensor = False
+        torch_dtype = None
+
+    num_samples = len(np_data)
+    num_noisy = int(round(noise_fraction * num_samples))
+    if num_noisy == 0:
+        return data_array
+
+    rng = np.random.RandomState(noise_seed)
+    noisy_indices = rng.choice(num_samples, size=num_noisy, replace=False)
+
+    if np.issubdtype(np_data.dtype, np.integer):
+        max_value = np.iinfo(np_data.dtype).max
+    else:
+        max_value = 1.0
+    normalized = np_data.astype(np.float32) / max_value
+
+    shape_tail = normalized.shape[1:]
+    if noise_type == 'gaussian':
+        noise = rng.normal(loc=0.0, scale=noise_strength, size=(num_noisy, *shape_tail)).astype(np.float32)
+        normalized[noisy_indices] = np.clip(normalized[noisy_indices] + noise, 0.0, 1.0)
+    elif noise_type == 'uniform':
+        noise = rng.uniform(low=-noise_strength, high=noise_strength, size=(num_noisy, *shape_tail)).astype(np.float32)
+        normalized[noisy_indices] = np.clip(normalized[noisy_indices] + noise, 0.0, 1.0)
+    elif noise_type == 'poisson':
+        lam = max(noise_strength, 1e-6)
+        scaled = np.clip(normalized[noisy_indices] * lam, 0.0, None)
+        poisson_vals = rng.poisson(scaled).astype(np.float32)
+        poisson_perturbation = poisson_vals / lam - normalized[noisy_indices]
+        normalized[noisy_indices] = np.clip(normalized[noisy_indices] + poisson_perturbation, 0.0, 1.0)
+    else:
+        raise ValueError(f'Unsupported noise type: {noise_type}')
+
+    np_data[noisy_indices] = (normalized[noisy_indices] * max_value).astype(np_data.dtype)
+
+    if as_tensor:
+        tensor_result = torch.from_numpy(np_data)
+        if tensor_result.dtype != torch_dtype:
+            tensor_result = tensor_result.to(dtype=torch_dtype)
+        return tensor_result
+    return np_data
+
 def get_MNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     raw_train = datasets.MNIST('./data/MNIST', train=True, download=True)
     raw_test = datasets.MNIST('./data/MNIST', train=False, download=True)
