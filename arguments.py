@@ -55,6 +55,14 @@ def get_args() -> argparse.Namespace:
 	parser.add_argument('--input_noise_seed', type=int, default=4666,
 						help='Random seed used when selecting which samples to corrupt.')
 
+	# weights and biases (W&B) logging configuration
+	parser.add_argument('--use_wandb', type=lambda x: x.lower() in ('true', '1', 'yes'), default=True,
+						help='Enable Weights & Biases logging (True/False).')
+	parser.add_argument('--wandb_project', type=str, default='DeepAL-HCML',
+						help='W&B project name.')
+	parser.add_argument('--wandb_entity', type=str, default=None,
+						help='W&B entity (username or team). If None, uses default.')
+
 	
 	args = parser.parse_args()
 	return args

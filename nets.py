@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -9,6 +11,7 @@ from torch.autograd import Variable
 from copy import deepcopy
 from tqdm import tqdm
 import torch.nn.init as init
+from typing import Callable, Optional, Any
 
 class Net:
     def __init__(self, net, params, device):
@@ -16,7 +19,7 @@ class Net:
         self.params = params
         self.device = device
         
-    def train(self, data):
+    def train(self, data: Any, wandb_log_callback: Optional[Callable[[int, float, Optional[float]], None]] = None) -> None:
         n_epoch = self.params['n_epoch']
 
         dim = data.X.shape[1:]
@@ -31,6 +34,7 @@ class Net:
 
         loader = DataLoader(data, shuffle=True, **self.params['loader_tr_args'])
         for epoch in tqdm(range(1, n_epoch+1), ncols=100):
+            epoch_loss = 0.0
             for batch_idx, (x, y, idxs) in enumerate(loader):
                 x, y = x.to(self.device), y.to(self.device)
                 optimizer.zero_grad()
@@ -38,6 +42,12 @@ class Net:
                 loss = F.cross_entropy(out, y)
                 loss.backward()
                 optimizer.step()
+                epoch_loss += loss.item()
+            
+            # Compute mean loss for the epoch and log if callback provided
+            avg_epoch_loss = epoch_loss / len(loader)
+            if wandb_log_callback is not None:
+                wandb_log_callback(epoch, avg_epoch_loss, None)
 
     def predict(self, data):
         self.clf.eval()
