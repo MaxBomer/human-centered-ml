@@ -27,7 +27,7 @@ DATA_NAME = args_input.dataset_name
 STRATEGY_NAME = args_input.ALstrategy
 
 
-SEED = args_input.seed
+SEED: int = args_input.seed  # type: ignore[assignment]  # Override final for runtime
 os.environ['TORCH_HOME']='./basicmodel'
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args_input.gpu)
 
@@ -101,8 +101,8 @@ while (iteration > 0):
 	# round 1 to rd
 	for rd in range(1, NUM_ROUND+1):
 		print('Round {}'.format(rd))
-		high_confident_idx = []
-		high_confident_pseudo_label = []
+		high_confident_idx: list[int] = []
+		high_confident_pseudo_label: list[int] = []
 		# query
 		if 'CEALSampling' in args_input.ALstrategy:
 			q_idxs, new_data = strategy.query(NUM_QUERY, rd, option = args_input.ALstrategy[13:])

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import warnings
 import argparse
 import sys
@@ -9,7 +11,7 @@ from ast import literal_eval
 import copy
 
 	
-def get_args():
+def get_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description='Extended Deep Active Learning Toolkit')
 	#basic arguments
 	parser.add_argument('--ALstrategy', '-a', default='EntropySampling', type=str, help='name of active learning strategies')

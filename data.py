@@ -1,12 +1,32 @@
+from __future__ import annotations
+
 import numpy as np
 import torch
 import random
 import os
 from torchvision import datasets
 from PIL import Image
+from typing import Callable, Any
+from torch.utils.data import Dataset
+from torchvision import transforms
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from parameters import TaskConfig
+    
+    TaskArgs = TaskConfig
 
 class Data:
-    def __init__(self, X_train, Y_train, X_test, Y_test, handler, args_task):
+    def __init__(
+        self,
+        X_train: torch.Tensor | np.ndarray,
+        Y_train: torch.Tensor | np.ndarray,
+        X_test: torch.Tensor | np.ndarray,
+        Y_test: torch.Tensor | np.ndarray,
+        handler: Callable[[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray, transforms.Compose | None], Dataset],
+        args_task: TaskArgs
+    ) -> None:
         self.X_train = X_train
         self.Y_train = Y_train
         self.X_test = X_test
@@ -17,76 +37,76 @@ class Data:
         self.n_pool = len(X_train)
         self.n_test = len(X_test)
         
-        self.labeled_idxs = np.zeros(self.n_pool, dtype=bool)
+        self.labeled_idxs: np.ndarray = np.zeros(self.n_pool, dtype=bool)
         
-    def initialize_labels(self, num):
+    def initialize_labels(self, num: int) -> None:
         # generate initial labeled pool
         tmp_idxs = np.arange(self.n_pool)
         np.random.shuffle(tmp_idxs)
         self.labeled_idxs[tmp_idxs[:num]] = True
     
-    def get_unlabeled_data_by_idx(self, idx):
+    def get_unlabeled_data_by_idx(self, idx: int) -> torch.Tensor | np.ndarray:
         unlabeled_idxs = np.arange(self.n_pool)[~self.labeled_idxs]
         return self.X_train[unlabeled_idxs][idx]
     
-    def get_data_by_idx(self, idx):
+    def get_data_by_idx(self, idx: int) -> tuple[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray]:
         return self.X_train[idx], self.Y_train[idx]
 
-    def get_new_data(self, X, Y):
+    def get_new_data(self, X: torch.Tensor | np.ndarray, Y: torch.Tensor | np.ndarray) -> Dataset:
         return self.handler(X, Y, self.args_task['transform_train'])
 
-    def get_labeled_data(self):
+    def get_labeled_data(self) -> tuple[np.ndarray, Dataset]:
         labeled_idxs = np.arange(self.n_pool)[self.labeled_idxs]
         return labeled_idxs, self.handler(self.X_train[labeled_idxs], self.Y_train[labeled_idxs], self.args_task['transform_train'])
     
-    def get_unlabeled_data(self):
+    def get_unlabeled_data(self) -> tuple[np.ndarray, Dataset]:
         unlabeled_idxs = np.arange(self.n_pool)[~self.labeled_idxs]
         return unlabeled_idxs, self.handler(self.X_train[unlabeled_idxs], self.Y_train[unlabeled_idxs], self.args_task['transform_train'])
     
-    def get_train_data(self):
+    def get_train_data(self) -> tuple[np.ndarray, Dataset]:
         return self.labeled_idxs.copy(), self.handler(self.X_train, self.Y_train, self.args_task['transform_train'])
 
-    def get_test_data(self):
+    def get_test_data(self) -> Dataset:
         return self.handler(self.X_test, self.Y_test, self.args_task['transform'])
     
-    def get_partial_labeled_data(self):
+    def get_partial_labeled_data(self) -> tuple[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray]:
         labeled_idxs = np.arange(self.n_pool)[self.labeled_idxs]
         return self.X_train[labeled_idxs], self.Y_train[labeled_idxs]
     
-    def get_partial_unlabeled_data(self):
+    def get_partial_unlabeled_data(self) -> tuple[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray]:
         unlabeled_idxs = np.arange(self.n_pool)[~self.labeled_idxs]
         return self.X_train[unlabeled_idxs], self.Y_train[unlabeled_idxs]
 
-    def cal_test_acc(self, preds):
+    def cal_test_acc(self, preds: torch.Tensor) -> float:
         return 1.0 * (self.Y_test==preds).sum().item() / self.n_test
 
     
-def get_MNIST(handler, args_task):
+def get_MNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     raw_train = datasets.MNIST('./data/MNIST', train=True, download=True)
     raw_test = datasets.MNIST('./data/MNIST', train=False, download=True)
     return Data(raw_train.data, raw_train.targets, raw_test.data, raw_test.targets, handler, args_task)
 
-def get_FashionMNIST(handler, args_task):
+def get_FashionMNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     raw_train = datasets.FashionMNIST('./data/FashionMNIST', train=True, download=True)
     raw_test = datasets.FashionMNIST('./data/FashionMNIST', train=False, download=True)
     return Data(raw_train.data, raw_train.targets, raw_test.data, raw_test.targets, handler, args_task)
 
-def get_EMNIST(handler, args_task):
+def get_EMNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     raw_train = datasets.EMNIST('./data/EMNIST', split = 'byclass', train=True, download=True)
     raw_test = datasets.EMNIST('./data/EMNIST', split = 'byclass', train=False, download=True)
     return Data(raw_train.data, raw_train.targets, raw_test.data, raw_test.targets, handler, args_task)
 
-def get_SVHN(handler, args_task):
+def get_SVHN(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.SVHN('./data/SVHN', split='train', download=True)
     data_test = datasets.SVHN('./data/SVHN', split='test', download=True)
     return Data(data_train.data, torch.from_numpy(data_train.labels), data_test.data, torch.from_numpy(data_test.labels), handler, args_task)
 
-def get_CIFAR10(handler, args_task):
+def get_CIFAR10(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.CIFAR10('./data/CIFAR10', train=True, download=True)
     data_test = datasets.CIFAR10('./data/CIFAR10', train=False, download=True)
     return Data(data_train.data, torch.LongTensor(data_train.targets), data_test.data, torch.LongTensor(data_test.targets), handler, args_task)
 
-def get_CIFAR10_imb(handler, args_task):
+def get_CIFAR10_imb(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.CIFAR10('./data/CIFAR10', train=True, download=True)
     data_test = datasets.CIFAR10('./data/CIFAR10', train=False, download=True)
     X_tr = data_train.data
@@ -106,12 +126,12 @@ def get_CIFAR10_imb(handler, args_task):
     Y_tr_imb = torch.LongTensor(np.array(Y_tr_imb)).type_as(Y_tr)
     return Data(X_tr_imb, Y_tr_imb, X_te, Y_te, handler, args_task)
 
-def get_CIFAR100(handler, args_task):
+def get_CIFAR100(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.CIFAR100('./data/CIFAR100', train=True, download=True)
     data_test = datasets.CIFAR100('./data/CIFAR100', train=False, download=True)
     return Data(data_train.data, torch.LongTensor(data_train.targets), data_test.data, torch.LongTensor(data_test.targets), handler, args_task)
 
-def get_TinyImageNet(handler, args_task):
+def get_TinyImageNet(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     import cv2
     #download data from http://cs231n.stanford.edu/tiny-imagenet-200.zip and unzip it into ./data/TinyImageNet
     # deal with training set
@@ -179,7 +199,7 @@ def get_TinyImageNet(handler, args_task):
     Y_te = torch.from_numpy(np.array(Y_te)).long()
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
-def get_openml(handler, args_task, selection = 6):
+def get_openml(handler: Callable[..., Dataset], args_task: TaskArgs, selection: int = 6) -> Data:
     import openml
     from sklearn.preprocessing import LabelEncoder
     openml.config.apikey = '3411e20aff621cc890bf403f104ac4bc'
@@ -215,7 +235,7 @@ def get_openml(handler, args_task, selection = 6):
         if len(np.unique(Y_tr)) == num_classes: break
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
-def get_BreakHis(handler, args_task):
+def get_BreakHis(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     # download data from https://www.kaggle.com/datasets/ambarish/breakhis and unzip it in data/BreakHis/
     data_dir = './data/BreakHis/BreaKHis_v1/BreaKHis_v1/histology_slides/breast'
     data = datasets.ImageFolder(root = data_dir, transform = None).imgs
@@ -235,7 +255,7 @@ def get_BreakHis(handler, args_task):
     Y_te = torch.from_numpy(np.array(Y_te))
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
-def get_PneumoniaMNIST(handler, args_task):
+def get_PneumoniaMNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     # download data from https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia and unzip it in data/PhwumniaMNIST/
     import cv2
 
@@ -301,7 +321,7 @@ def get_PneumoniaMNIST(handler, args_task):
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
 
-def get_waterbirds(handler, args_task):
+def get_waterbirds(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     import wilds
     from torchvision import transforms
     dataset = wilds.get_dataset(dataset='waterbirds', root_dir='./data/waterbirds', download='True')
