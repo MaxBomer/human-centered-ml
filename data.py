@@ -83,11 +83,65 @@ class Data:
     def apply_permanent_input_noise(self, noise_cfg: dict[str, Any] | None, corrupt_test: bool = False) -> None:
         if noise_cfg is None:
             return
+        
         self.X_train = apply_input_noise(self.X_train, noise_cfg)
+        self.Y_train, train_label_uniques = apply_label_noise(self.Y_train, noise_cfg)
         if corrupt_test:
             self.X_test = apply_input_noise(self.X_test, noise_cfg)
+            self.Y_test, _ = apply_label_noise(self.Y_test, noise_cfg, train_label_uniques)
 
+   
+def apply_label_noise(
+    data_array: torch.Tensor | np.ndarray,
+    noise_cfg: dict[str, Any],
+    uniques: np.ndarray | None = None
+) -> tuple[torch.Tensor | np.ndarray, np.ndarray]:
     
+    noise_fraction = float(noise_cfg.get('label_fraction', 0.0))
+    noise_seed = int(noise_cfg.get('seed', 4666))
+
+    if uniques is None:
+        uniques = np.array([])
+
+    if noise_fraction <= 0.0:
+        return data_array, uniques
+
+    if isinstance(data_array, torch.Tensor):
+        np_data = data_array.clone().cpu().numpy()
+        as_tensor = True
+        torch_dtype = data_array.dtype
+    else:
+        np_data = np.array(data_array, copy=True)
+        as_tensor = False
+        torch_dtype = None
+
+    num_samples = len(np_data)
+    num_noisy = int(round(noise_fraction * num_samples))
+    if num_noisy == 0:
+        return data_array, uniques
+
+    rng = np.random.RandomState(noise_seed)
+    noisy_indices = rng.choice(num_samples, size=num_noisy, replace=False)
+
+    current_uniques = np.unique(np_data)
+    uniques = np.unique(np.concatenate([uniques, current_uniques]))
+    
+    for idx in noisy_indices:
+        current_label = np_data[idx]
+        other_labels = uniques[uniques != current_label]
+        if len(other_labels) > 0:
+            np_data[idx] = rng.choice(other_labels)
+    
+    if as_tensor:
+        tensor_result = torch.from_numpy(np_data)
+        if tensor_result.dtype != torch_dtype:
+            tensor_result = tensor_result.to(dtype=torch_dtype)
+        return tensor_result, uniques
+    return np_data, uniques
+
+
+
+
 def apply_input_noise(
     data_array: torch.Tensor | np.ndarray,
     noise_cfg: dict[str, Any]

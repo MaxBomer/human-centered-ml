@@ -36,7 +36,8 @@ if args_input.input_noise_type != 'none' and noise_fraction > 0.0:
 		'type': args_input.input_noise_type,
 		'fraction': noise_fraction,
 		'strength': args_input.input_noise_strength,
-		'seed': args_input.input_noise_seed
+		'seed': args_input.input_noise_seed,
+		"label_fraction": args_input.label_noise_fraction
 	}
 
 
