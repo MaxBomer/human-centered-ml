@@ -1,0 +1,11 @@
+dataset: CIFAR10
+AL strategy: KCenterGreedy
+number of labeled pool: 1000
+number of unlabeled pool: 49000
+number of testing pool: 10000
+batch size: 500
+quota: 40000
+time of repeat experiments: 1
+0: 0.799
+mean acc: 0.799. std dev acc: 0.0
+mean time: 60315.0. std dev acc: 0.0

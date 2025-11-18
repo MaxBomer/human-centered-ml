@@ -1,0 +1,13 @@
+dataset: CIFAR10
+AL strategy: RandomSampling
+number of labeled pool: 1000
+number of unlabeled pool: 49000
+number of testing pool: 10000
+batch size: 500
+quota: 40000
+time of repeat experiments: 3
+0: 0.795
+1: 0.797
+2: 0.797
+mean acc: 0.7963. std dev acc: 0.0009
+mean time: 6969.0. std dev acc: 59.4026

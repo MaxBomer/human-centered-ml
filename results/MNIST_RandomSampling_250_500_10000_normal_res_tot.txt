@@ -1,0 +1,13 @@
+dataset: MNIST
+AL strategy: RandomSampling
+number of labeled pool: 500
+number of unlabeled pool: 59500
+number of testing pool: 10000
+batch size: 250
+quota: 10000
+time of repeat experiments: 3
+0: 0.965
+1: 0.961
+2: 0.964
+mean acc: 0.9633. std dev acc: 0.0017
+mean time: 907.3333. std dev acc: 9.1043

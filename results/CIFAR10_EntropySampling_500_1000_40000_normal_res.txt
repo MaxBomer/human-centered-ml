@@ -1,0 +1,89 @@
+dataset: CIFAR10
+AL strategy: EntropySampling
+number of labeled pool: 1000
+number of unlabeled pool: 49000
+number of testing pool: 10000
+batch size: 500
+quota: 40000
+time of repeat experiments: 3
+Size of training set is 1000, accuracy is 0.4815.
+Size of training set is 1500, accuracy is 0.5273.
+Size of training set is 2000, accuracy is 0.5581.
+Size of training set is 2500, accuracy is 0.5788.
+Size of training set is 3000, accuracy is 0.5947.
+Size of training set is 3500, accuracy is 0.6436.
+Size of training set is 4000, accuracy is 0.669.
+Size of training set is 4500, accuracy is 0.6912.
+Size of training set is 5000, accuracy is 0.6881.
+Size of training set is 5500, accuracy is 0.6988.
+Size of training set is 6000, accuracy is 0.7244.
+Size of training set is 6500, accuracy is 0.7286.
+Size of training set is 7000, accuracy is 0.7371.
+Size of training set is 7500, accuracy is 0.7145.
+Size of training set is 8000, accuracy is 0.747.
+Size of training set is 8500, accuracy is 0.7659.
+Size of training set is 9000, accuracy is 0.7671.
+Size of training set is 9500, accuracy is 0.7811.
+Size of training set is 10000, accuracy is 0.7663.
+Size of training set is 10500, accuracy is 0.7649.
+Size of training set is 11000, accuracy is 0.7979.
+Size of training set is 11500, accuracy is 0.7765.
+Size of training set is 12000, accuracy is 0.8029.
+Size of training set is 12500, accuracy is 0.7961.
+Size of training set is 13000, accuracy is 0.8012.
+Size of training set is 13500, accuracy is 0.8115.
+Size of training set is 14000, accuracy is 0.8187.
+Size of training set is 14500, accuracy is 0.8209.
+Size of training set is 15000, accuracy is 0.819.
+Size of training set is 15500, accuracy is 0.8354.
+Size of training set is 16000, accuracy is 0.829.
+Size of training set is 16500, accuracy is 0.833.
+Size of training set is 17000, accuracy is 0.8294.
+Size of training set is 17500, accuracy is 0.8325.
+Size of training set is 18000, accuracy is 0.8307.
+Size of training set is 18500, accuracy is 0.8423.
+Size of training set is 19000, accuracy is 0.8341.
+Size of training set is 19500, accuracy is 0.8501.
+Size of training set is 20000, accuracy is 0.849.
+Size of training set is 20500, accuracy is 0.8471.
+Size of training set is 21000, accuracy is 0.8449.
+Size of training set is 21500, accuracy is 0.8475.
+Size of training set is 22000, accuracy is 0.8532.
+Size of training set is 22500, accuracy is 0.8526.
+Size of training set is 23000, accuracy is 0.8572.
+Size of training set is 23500, accuracy is 0.8626.
+Size of training set is 24000, accuracy is 0.8657.
+Size of training set is 24500, accuracy is 0.8592.
+Size of training set is 25000, accuracy is 0.8565.
+Size of training set is 25500, accuracy is 0.8624.
+Size of training set is 26000, accuracy is 0.8641.
+Size of training set is 26500, accuracy is 0.8614.
+Size of training set is 27000, accuracy is 0.8703.
+Size of training set is 27500, accuracy is 0.868.
+Size of training set is 28000, accuracy is 0.8612.
+Size of training set is 28500, accuracy is 0.87.
+Size of training set is 29000, accuracy is 0.87.
+Size of training set is 29500, accuracy is 0.8765.
+Size of training set is 30000, accuracy is 0.8755.
+Size of training set is 30500, accuracy is 0.8741.
+Size of training set is 31000, accuracy is 0.8693.
+Size of training set is 31500, accuracy is 0.8775.
+Size of training set is 32000, accuracy is 0.8696.
+Size of training set is 32500, accuracy is 0.8791.
+Size of training set is 33000, accuracy is 0.864.
+Size of training set is 33500, accuracy is 0.8759.
+Size of training set is 34000, accuracy is 0.8751.
+Size of training set is 34500, accuracy is 0.8711.
+Size of training set is 35000, accuracy is 0.873.
+Size of training set is 35500, accuracy is 0.8782.
+Size of training set is 36000, accuracy is 0.8819.
+Size of training set is 36500, accuracy is 0.869.
+Size of training set is 37000, accuracy is 0.8765.
+Size of training set is 37500, accuracy is 0.8793.
+Size of training set is 38000, accuracy is 0.8776.
+Size of training set is 38500, accuracy is 0.8792.
+Size of training set is 39000, accuracy is 0.8773.
+Size of training set is 39500, accuracy is 0.8771.
+Size of training set is 40000, accuracy is 0.8811.
+Size of training set is 40500, accuracy is 0.8806.
+Size of training set is 41000, accuracy is 0.8747.

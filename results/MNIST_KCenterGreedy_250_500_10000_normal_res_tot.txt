@@ -1,0 +1,13 @@
+dataset: MNIST
+AL strategy: KCenterGreedy
+number of labeled pool: 500
+number of unlabeled pool: 59500
+number of testing pool: 10000
+batch size: 250
+quota: 10000
+time of repeat experiments: 3
+0: 0.963
+1: 0.973
+2: 0.971
+mean acc: 0.969. std dev acc: 0.0043
+mean time: 9970.6667. std dev acc: 13.0213
