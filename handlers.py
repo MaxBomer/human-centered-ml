@@ -1,64 +1,90 @@
+from __future__ import annotations
+
 import numpy as np
 from torchvision import transforms
 from torch.utils.data import Dataset
 from PIL import Image
+import torch
 
 class MNIST_Handler(Dataset):
-    def __init__(self, X, Y, transform):
+    def __init__(
+        self,
+        X: torch.Tensor,
+        Y: torch.Tensor,
+        transform: transforms.Compose | None
+    ) -> None:
         self.X = X
         self.Y = Y
         self.transform = transform
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor, int]:
         x, y = self.X[index], self.Y[index]
         x = Image.fromarray(x.numpy(), mode='L')
-        x = self.transform(x)
+        if self.transform is not None:
+            x = self.transform(x)
         return x, y, index
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.X)
 
 class SVHN_Handler(Dataset):
-    def __init__(self, X, Y, transform):
+    def __init__(
+        self,
+        X: torch.Tensor | np.ndarray,
+        Y: torch.Tensor | np.ndarray,
+        transform: transforms.Compose | None
+    ) -> None:
         self.X = X
         self.Y = Y
         self.transform = transform
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor, int]:
         x, y = self.X[index], self.Y[index]
         x = Image.fromarray(np.transpose(x, (1, 2, 0)))
-        x = self.transform(x)
+        if self.transform is not None:
+            x = self.transform(x)
         return x, y, index
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.X)
 
 class CIFAR10_Handler(Dataset):
-    def __init__(self, X, Y, transform):
+    def __init__(
+        self,
+        X: np.ndarray,
+        Y: torch.Tensor | np.ndarray,
+        transform: transforms.Compose | None
+    ) -> None:
         self.X = X
         self.Y = Y
         self.transform = transform
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor | int, int]:
         x, y = self.X[index], self.Y[index]
         x = Image.fromarray(x)
-        x = self.transform(x)
+        if self.transform is not None:
+            x = self.transform(x)
         return x, y, index
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.X)
 
 class openml_Handler(Dataset):
-    def __init__(self, X, Y, transform):
+    def __init__(
+        self,
+        X: torch.Tensor,
+        Y: torch.Tensor,
+        transform: transforms.Compose | None
+    ) -> None:
         self.X = X
         self.Y = Y
         self.transform = transform
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor, int]:
         x, y = self.X[index], self.Y[index]
         return x, y, index
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.X)
 
 class MNIST_Handler_joint(Dataset):

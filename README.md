@@ -51,6 +51,7 @@ conda env create -f environment.yml
 
 ## Demo 
 
+### Full Experiment
 ```
   python demo.py \
       -a RandomSampling \
@@ -62,7 +63,31 @@ conda env create -f environment.yml
       -t 3 \
       -g 0
 ```
-See `arguments.py` for more instructions.
+
+### Quick Test (Fast Validation)
+For quick testing and validation, use `quick_test.py` with minimal iterations:
+
+```bash
+# Test RandomSampling on MNIST (fast - ~1-2 minutes)
+python quick_test.py -a RandomSampling -d MNIST -s 100 -q 200 -b 50
+
+# Test EntropySampling on MNIST
+python quick_test.py -a EntropySampling -d MNIST -s 100 -q 200 -b 50
+
+# Test KCenterGreedy on MNIST
+python quick_test.py -a KCenterGreedy -d MNIST -s 100 -q 200 -b 50
+
+# Test on CIFAR10 (slower but still quick)
+python quick_test.py -a RandomSampling -d CIFAR10 -s 200 -q 500 -b 100
+```
+
+The quick test uses:
+- Smaller initial labeled pool
+- Reduced quota (200-500 samples)
+- Fewer rounds (4-10 rounds)
+- Single iteration (no repeats)
+
+See `arguments.py` for more instructions on full experiments.
 We have also constructed a comparative survey based on DeepAL+. 
 Please refer to [here](https://arxiv.org/pdf/2203.13450.pdf) for more details.
 

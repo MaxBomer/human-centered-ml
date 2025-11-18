@@ -1,11 +1,27 @@
+from __future__ import annotations
+
 import os
 from torchvision import transforms
 import random
+from typing import Final, TypedDict, Any
 
-SEED = 4666
+SEED: Final[int] = 4666
 
 
-args_pool = {'MNIST':
+# Type definition for task arguments
+class TaskConfig(TypedDict):
+    n_epoch: int
+    name: str
+    transform_train: transforms.Compose
+    transform: transforms.Compose
+    loader_tr_args: dict[str, Any]
+    loader_te_args: dict[str, Any]
+    num_class: int
+    optimizer: str
+    pretrained: bool
+    optimizer_args: dict[str, Any]
+
+args_pool: dict[str, TaskConfig] = {'MNIST':
 				{'n_epoch': 20, 
 				 'name': 'MNIST',
 				 'transform_train': transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]),

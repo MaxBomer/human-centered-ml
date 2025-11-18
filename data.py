@@ -1,12 +1,32 @@
+from __future__ import annotations
+
 import numpy as np
 import torch
 import random
 import os
 from torchvision import datasets
 from PIL import Image
+from typing import Callable, Any
+from torch.utils.data import Dataset
+from torchvision import transforms
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from parameters import TaskConfig
+    
+    TaskArgs = TaskConfig
 
 class Data:
-    def __init__(self, X_train, Y_train, X_test, Y_test, handler, args_task):
+    def __init__(
+        self,
+        X_train: torch.Tensor | np.ndarray,
+        Y_train: torch.Tensor | np.ndarray,
+        X_test: torch.Tensor | np.ndarray,
+        Y_test: torch.Tensor | np.ndarray,
+        handler: Callable[[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray, transforms.Compose | None], Dataset],
+        args_task: TaskArgs
+    ) -> None:
         self.X_train = X_train
         self.Y_train = Y_train
         self.X_test = X_test
@@ -17,76 +37,143 @@ class Data:
         self.n_pool = len(X_train)
         self.n_test = len(X_test)
         
-        self.labeled_idxs = np.zeros(self.n_pool, dtype=bool)
+        self.labeled_idxs: np.ndarray = np.zeros(self.n_pool, dtype=bool)
         
-    def initialize_labels(self, num):
+    def initialize_labels(self, num: int) -> None:
         # generate initial labeled pool
         tmp_idxs = np.arange(self.n_pool)
         np.random.shuffle(tmp_idxs)
         self.labeled_idxs[tmp_idxs[:num]] = True
     
-    def get_unlabeled_data_by_idx(self, idx):
+    def get_unlabeled_data_by_idx(self, idx: int) -> torch.Tensor | np.ndarray:
         unlabeled_idxs = np.arange(self.n_pool)[~self.labeled_idxs]
         return self.X_train[unlabeled_idxs][idx]
     
-    def get_data_by_idx(self, idx):
+    def get_data_by_idx(self, idx: int) -> tuple[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray]:
         return self.X_train[idx], self.Y_train[idx]
 
-    def get_new_data(self, X, Y):
+    def get_new_data(self, X: torch.Tensor | np.ndarray, Y: torch.Tensor | np.ndarray) -> Dataset:
         return self.handler(X, Y, self.args_task['transform_train'])
 
-    def get_labeled_data(self):
+    def get_labeled_data(self) -> tuple[np.ndarray, Dataset]:
         labeled_idxs = np.arange(self.n_pool)[self.labeled_idxs]
         return labeled_idxs, self.handler(self.X_train[labeled_idxs], self.Y_train[labeled_idxs], self.args_task['transform_train'])
     
-    def get_unlabeled_data(self):
+    def get_unlabeled_data(self) -> tuple[np.ndarray, Dataset]:
         unlabeled_idxs = np.arange(self.n_pool)[~self.labeled_idxs]
         return unlabeled_idxs, self.handler(self.X_train[unlabeled_idxs], self.Y_train[unlabeled_idxs], self.args_task['transform_train'])
     
-    def get_train_data(self):
+    def get_train_data(self) -> tuple[np.ndarray, Dataset]:
         return self.labeled_idxs.copy(), self.handler(self.X_train, self.Y_train, self.args_task['transform_train'])
 
-    def get_test_data(self):
+    def get_test_data(self) -> Dataset:
         return self.handler(self.X_test, self.Y_test, self.args_task['transform'])
     
-    def get_partial_labeled_data(self):
+    def get_partial_labeled_data(self) -> tuple[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray]:
         labeled_idxs = np.arange(self.n_pool)[self.labeled_idxs]
         return self.X_train[labeled_idxs], self.Y_train[labeled_idxs]
     
-    def get_partial_unlabeled_data(self):
+    def get_partial_unlabeled_data(self) -> tuple[torch.Tensor | np.ndarray, torch.Tensor | np.ndarray]:
         unlabeled_idxs = np.arange(self.n_pool)[~self.labeled_idxs]
         return self.X_train[unlabeled_idxs], self.Y_train[unlabeled_idxs]
 
-    def cal_test_acc(self, preds):
+    def cal_test_acc(self, preds: torch.Tensor) -> float:
         return 1.0 * (self.Y_test==preds).sum().item() / self.n_test
 
+    def apply_permanent_input_noise(self, noise_cfg: dict[str, Any] | None, corrupt_test: bool = False) -> None:
+        if noise_cfg is None:
+            return
+        self.X_train = apply_input_noise(self.X_train, noise_cfg)
+        if corrupt_test:
+            self.X_test = apply_input_noise(self.X_test, noise_cfg)
+
     
-def get_MNIST(handler, args_task):
+def apply_input_noise(
+    data_array: torch.Tensor | np.ndarray,
+    noise_cfg: dict[str, Any]
+) -> torch.Tensor | np.ndarray:
+    noise_type = noise_cfg.get('type', 'none')
+    noise_fraction = float(noise_cfg.get('fraction', 0.0))
+    noise_strength = float(noise_cfg.get('strength', 0.0))
+    noise_seed = int(noise_cfg.get('seed', 4666))
+
+    if noise_type == 'none' or noise_fraction <= 0.0 or noise_strength <= 0.0:
+        return data_array
+
+    if isinstance(data_array, torch.Tensor):
+        np_data = data_array.clone().cpu().numpy()
+        as_tensor = True
+        torch_dtype = data_array.dtype
+    else:
+        np_data = np.array(data_array, copy=True)
+        as_tensor = False
+        torch_dtype = None
+
+    num_samples = len(np_data)
+    num_noisy = int(round(noise_fraction * num_samples))
+    if num_noisy == 0:
+        return data_array
+
+    rng = np.random.RandomState(noise_seed)
+    noisy_indices = rng.choice(num_samples, size=num_noisy, replace=False)
+
+    if np.issubdtype(np_data.dtype, np.integer):
+        max_value = np.iinfo(np_data.dtype).max
+    else:
+        max_value = 1.0
+    normalized = np_data.astype(np.float32) / max_value
+
+    shape_tail = normalized.shape[1:]
+    if noise_type == 'gaussian':
+        noise = rng.normal(loc=0.0, scale=noise_strength, size=(num_noisy, *shape_tail)).astype(np.float32)
+        normalized[noisy_indices] = np.clip(normalized[noisy_indices] + noise, 0.0, 1.0)
+    elif noise_type == 'uniform':
+        noise = rng.uniform(low=-noise_strength, high=noise_strength, size=(num_noisy, *shape_tail)).astype(np.float32)
+        normalized[noisy_indices] = np.clip(normalized[noisy_indices] + noise, 0.0, 1.0)
+    elif noise_type == 'poisson':
+        lam = max(noise_strength, 1e-6)
+        scaled = np.clip(normalized[noisy_indices] * lam, 0.0, None)
+        poisson_vals = rng.poisson(scaled).astype(np.float32)
+        poisson_perturbation = poisson_vals / lam - normalized[noisy_indices]
+        normalized[noisy_indices] = np.clip(normalized[noisy_indices] + poisson_perturbation, 0.0, 1.0)
+    else:
+        raise ValueError(f'Unsupported noise type: {noise_type}')
+
+    np_data[noisy_indices] = (normalized[noisy_indices] * max_value).astype(np_data.dtype)
+
+    if as_tensor:
+        tensor_result = torch.from_numpy(np_data)
+        if tensor_result.dtype != torch_dtype:
+            tensor_result = tensor_result.to(dtype=torch_dtype)
+        return tensor_result
+    return np_data
+
+def get_MNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     raw_train = datasets.MNIST('./data/MNIST', train=True, download=True)
     raw_test = datasets.MNIST('./data/MNIST', train=False, download=True)
     return Data(raw_train.data, raw_train.targets, raw_test.data, raw_test.targets, handler, args_task)
 
-def get_FashionMNIST(handler, args_task):
+def get_FashionMNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     raw_train = datasets.FashionMNIST('./data/FashionMNIST', train=True, download=True)
     raw_test = datasets.FashionMNIST('./data/FashionMNIST', train=False, download=True)
     return Data(raw_train.data, raw_train.targets, raw_test.data, raw_test.targets, handler, args_task)
 
-def get_EMNIST(handler, args_task):
+def get_EMNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     raw_train = datasets.EMNIST('./data/EMNIST', split = 'byclass', train=True, download=True)
     raw_test = datasets.EMNIST('./data/EMNIST', split = 'byclass', train=False, download=True)
     return Data(raw_train.data, raw_train.targets, raw_test.data, raw_test.targets, handler, args_task)
 
-def get_SVHN(handler, args_task):
+def get_SVHN(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.SVHN('./data/SVHN', split='train', download=True)
     data_test = datasets.SVHN('./data/SVHN', split='test', download=True)
     return Data(data_train.data, torch.from_numpy(data_train.labels), data_test.data, torch.from_numpy(data_test.labels), handler, args_task)
 
-def get_CIFAR10(handler, args_task):
+def get_CIFAR10(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.CIFAR10('./data/CIFAR10', train=True, download=True)
     data_test = datasets.CIFAR10('./data/CIFAR10', train=False, download=True)
     return Data(data_train.data, torch.LongTensor(data_train.targets), data_test.data, torch.LongTensor(data_test.targets), handler, args_task)
 
-def get_CIFAR10_imb(handler, args_task):
+def get_CIFAR10_imb(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.CIFAR10('./data/CIFAR10', train=True, download=True)
     data_test = datasets.CIFAR10('./data/CIFAR10', train=False, download=True)
     X_tr = data_train.data
@@ -106,12 +193,12 @@ def get_CIFAR10_imb(handler, args_task):
     Y_tr_imb = torch.LongTensor(np.array(Y_tr_imb)).type_as(Y_tr)
     return Data(X_tr_imb, Y_tr_imb, X_te, Y_te, handler, args_task)
 
-def get_CIFAR100(handler, args_task):
+def get_CIFAR100(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     data_train = datasets.CIFAR100('./data/CIFAR100', train=True, download=True)
     data_test = datasets.CIFAR100('./data/CIFAR100', train=False, download=True)
     return Data(data_train.data, torch.LongTensor(data_train.targets), data_test.data, torch.LongTensor(data_test.targets), handler, args_task)
 
-def get_TinyImageNet(handler, args_task):
+def get_TinyImageNet(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     import cv2
     #download data from http://cs231n.stanford.edu/tiny-imagenet-200.zip and unzip it into ./data/TinyImageNet
     # deal with training set
@@ -179,7 +266,7 @@ def get_TinyImageNet(handler, args_task):
     Y_te = torch.from_numpy(np.array(Y_te)).long()
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
-def get_openml(handler, args_task, selection = 6):
+def get_openml(handler: Callable[..., Dataset], args_task: TaskArgs, selection: int = 6) -> Data:
     import openml
     from sklearn.preprocessing import LabelEncoder
     openml.config.apikey = '3411e20aff621cc890bf403f104ac4bc'
@@ -215,7 +302,7 @@ def get_openml(handler, args_task, selection = 6):
         if len(np.unique(Y_tr)) == num_classes: break
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
-def get_BreakHis(handler, args_task):
+def get_BreakHis(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     # download data from https://www.kaggle.com/datasets/ambarish/breakhis and unzip it in data/BreakHis/
     data_dir = './data/BreakHis/BreaKHis_v1/BreaKHis_v1/histology_slides/breast'
     data = datasets.ImageFolder(root = data_dir, transform = None).imgs
@@ -235,7 +322,7 @@ def get_BreakHis(handler, args_task):
     Y_te = torch.from_numpy(np.array(Y_te))
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
-def get_PneumoniaMNIST(handler, args_task):
+def get_PneumoniaMNIST(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     # download data from https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia and unzip it in data/PhwumniaMNIST/
     import cv2
 
@@ -301,7 +388,7 @@ def get_PneumoniaMNIST(handler, args_task):
     return Data(X_tr, Y_tr, X_te, Y_te, handler, args_task)
 
 
-def get_waterbirds(handler, args_task):
+def get_waterbirds(handler: Callable[..., Dataset], args_task: TaskArgs) -> Data:
     import wilds
     from torchvision import transforms
     dataset = wilds.get_dataset(dataset='waterbirds', root_dir='./data/waterbirds', download='True')

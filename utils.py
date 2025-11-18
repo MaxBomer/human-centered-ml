@@ -85,37 +85,41 @@ def get_handler_joint(name):
 	else: 
 		raise NotImplementedError
 
-def get_dataset(name, args_task):
+def get_dataset(name, args_task, noise_cfg=None):
 	if name == 'MNIST':
-		return get_MNIST(get_handler(name), args_task)
+		dataset = get_MNIST(get_handler(name), args_task)
 	elif name == 'MNIST_pretrain':
-		return get_MNIST(get_handler(name), args_task)
+		dataset = get_MNIST(get_handler(name), args_task)
 	elif name == 'FashionMNIST':
-		return get_FashionMNIST(get_handler(name), args_task)
+		dataset = get_FashionMNIST(get_handler(name), args_task)
 	elif name == 'EMNIST':
-		return get_EMNIST(get_handler(name), args_task)
+		dataset = get_EMNIST(get_handler(name), args_task)
 	elif name == 'SVHN':
-		return get_SVHN(get_handler(name), args_task)
+		dataset = get_SVHN(get_handler(name), args_task)
 	elif name == 'CIFAR10':
-		return get_CIFAR10(get_handler(name), args_task)
+		dataset = get_CIFAR10(get_handler(name), args_task)
 	elif name == 'CIFAR10_imb':
-		return get_CIFAR10_imb(get_handler(name), args_task)
+		dataset = get_CIFAR10_imb(get_handler(name), args_task)
 	elif name == 'CIFAR100':
-		return get_CIFAR100(get_handler(name), args_task)
+		dataset = get_CIFAR100(get_handler(name), args_task)
 	elif name == 'TinyImageNet':
-		return get_TinyImageNet(get_handler(name), args_task)
+		dataset = get_TinyImageNet(get_handler(name), args_task)
 	elif name == 'openml':
-		return get_openml(get_handler(name), args_task)
+		dataset = get_openml(get_handler(name), args_task)
 	elif name == 'BreakHis':
-		return get_BreakHis(get_handler(name), args_task)
+		dataset = get_BreakHis(get_handler(name), args_task)
 	elif name == 'PneumoniaMNIST':
-		return get_PneumoniaMNIST(get_handler(name), args_task)
+		dataset = get_PneumoniaMNIST(get_handler(name), args_task)
 	elif name == 'waterbirds':
-		return get_waterbirds(get_handler(name), args_task)
+		dataset = get_waterbirds(get_handler(name), args_task)
 	elif name == 'waterbirds_pretrain':
-		return get_waterbirds(get_handler(name), args_task)
+		dataset = get_waterbirds(get_handler(name), args_task)
 	else:
 		raise NotImplementedError
+
+	if noise_cfg is not None:
+		dataset.apply_permanent_input_noise(noise_cfg)
+	return dataset
 
 #net
 

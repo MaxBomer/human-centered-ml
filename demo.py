@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import numpy as np
 import warnings
@@ -17,6 +19,7 @@ import datetime
 import arguments
 from parameters import *
 from utils import *
+from wandb_utils import initialize_wandb_run, log_round_metrics, log_run_summary, get_wandb_log_callback, finalize_wandb_run
 
 # parameters
 args_input = arguments.get_args()
@@ -26,8 +29,18 @@ NUM_ROUND = int(args_input.quota / args_input.batch)
 DATA_NAME = args_input.dataset_name
 STRATEGY_NAME = args_input.ALstrategy
 
+noise_fraction = max(0.0, min(1.0, args_input.input_noise_fraction))
+noise_cfg = None
+if args_input.input_noise_type != 'none' and noise_fraction > 0.0:
+	noise_cfg = {
+		'type': args_input.input_noise_type,
+		'fraction': noise_fraction,
+		'strength': args_input.input_noise_strength,
+		'seed': args_input.input_noise_seed
+	}
 
-SEED = args_input.seed
+
+SEED: int = args_input.seed  # type: ignore[assignment]  # Override final for runtime
 os.environ['TORCH_HOME']='./basicmodel'
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args_input.gpu)
 
@@ -48,6 +61,28 @@ os.makedirs(os.path.abspath('') + '/logfile', exist_ok=True)
 sys.stdout = Logger(os.path.abspath('') + '/logfile/' + DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_normal_log.txt')
 warnings.filterwarnings('ignore')
 
+# Initialize W&B
+run_config = {
+	'dataset': DATA_NAME,
+	'strategy': STRATEGY_NAME,
+	'batch_size': NUM_QUERY,
+	'init_labeled': NUM_INIT_LB,
+	'quota': args_input.quota,
+	'num_rounds': NUM_ROUND,
+	'seed': SEED,
+	'noise_type': args_input.input_noise_type,
+	'noise_fraction': args_input.input_noise_fraction,
+	'noise_strength': args_input.input_noise_strength,
+}
+run_name = f'{DATA_NAME}_{STRATEGY_NAME}_noise_{args_input.input_noise_type}_{args_input.input_noise_fraction}_iter'
+wandb_run = initialize_wandb_run(
+	use_wandb=args_input.use_wandb,
+	project=args_input.wandb_project,
+	entity=args_input.wandb_entity,
+	run_name=run_name,
+	config=run_config
+)
+
 # start experiment
 
 iteration = args_input.iteration
@@ -61,7 +96,7 @@ while (iteration > 0):
 
 	# data, network, strategy
 	args_task = args_pool[DATA_NAME]
-	dataset = get_dataset(args_input.dataset_name, args_task)				# load dataset
+	dataset = get_dataset(args_input.dataset_name, args_task, noise_cfg=noise_cfg)				# load dataset
 	if args_input.ALstrategy == 'LossPredictionLoss':
 		net = get_net_lpl(args_input.dataset_name, args_task, device)		# load network
 	elif args_input.ALstrategy == 'WAAL':
@@ -89,41 +124,48 @@ while (iteration > 0):
 	print(type(strategy).__name__)
 	
 	# round 0 accuracy
+	wandb_callback_0 = get_wandb_log_callback(wandb_run, round_number=0)
 	if args_input.ALstrategy == 'WAAL':
 		strategy.train(model_name = args_input.ALstrategy)
 	else:
-		strategy.train()
+		strategy.train(wandb_log_callback=wandb_callback_0)
 	preds = strategy.predict(dataset.get_test_data())
 	acc[0] = dataset.cal_test_acc(preds)
 	print('Round 0\ntesting accuracy {}'.format(acc[0]))
+	log_round_metrics(wandb_run, 0, acc[0], args_input.initseed, 0.0)
 	print('\n')
 	
 	# round 1 to rd
 	for rd in range(1, NUM_ROUND+1):
 		print('Round {}'.format(rd))
-		high_confident_idx = []
-		high_confident_pseudo_label = []
+		high_confident_idx: list[int] = []
+		high_confident_pseudo_label: list[int] = []
 		# query
+		round_start_time = datetime.datetime.now()
 		if 'CEALSampling' in args_input.ALstrategy:
 			q_idxs, new_data = strategy.query(NUM_QUERY, rd, option = args_input.ALstrategy[13:])
 		else:
 			q_idxs = strategy.query(NUM_QUERY)
+		round_acq_time = (datetime.datetime.now() - round_start_time).total_seconds()
 	
 		# update
 		strategy.update(q_idxs)
 
 		#train
+		wandb_callback_rd = get_wandb_log_callback(wandb_run, round_number=rd)
 		if 'CEALSampling' in args_input.ALstrategy:
 			strategy.train(new_data)
 		elif args_input.ALstrategy == 'WAAL':
 			strategy.train(model_name = args_input.ALstrategy)
 		else:
-			strategy.train()
+			strategy.train(wandb_log_callback=wandb_callback_rd)
 	
 		# round rd accuracy
 		preds = strategy.predict(dataset.get_test_data())
 		acc[rd] = dataset.cal_test_acc(preds)
+		num_labeled_rd = args_input.initseed + rd * NUM_QUERY
 		print('testing accuracy {}'.format(acc[rd]))
+		log_round_metrics(wandb_run, rd, acc[rd], num_labeled_rd, round_acq_time)
 		print('\n')
 
 		#torch.cuda.empty_cache()
@@ -173,6 +215,20 @@ print('mean time: '+str(mean_time)+'. std dev time: '+str(stddev_time))
 file_res_tot.writelines('mean acc: '+str(mean_acc)+'. std dev acc: '+str(stddev_acc)+'\n')
 file_res_tot.writelines('mean time: '+str(mean_time)+'. std dev acc: '+str(stddev_time)+'\n')
 
+# Compute average accuracy curve for logging
+avg_acc = np.mean(np.array(all_acc), axis=0)
+
+# Log summary to W&B
+summary = {
+	'mean_aubc': mean_acc,
+	'std_aubc': stddev_acc,
+	'mean_acquisition_time': mean_time,
+	'std_acquisition_time': stddev_time,
+	'final_accuracy': float(avg_acc[-1]) if len(avg_acc) > 0 else 0.0,
+}
+log_run_summary(wandb_run, summary)
+finalize_wandb_run(wandb_run)
+
 # save result
 
 file_name_res = DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_normal_res.txt'
@@ -187,7 +243,6 @@ file_res.writelines('number of testing pool: {}'.format(dataset.n_test) + '\n')
 file_res.writelines('batch size: {}'.format(NUM_QUERY) + '\n')
 file_res.writelines('quota: {}'.format(NUM_ROUND*NUM_QUERY)+ '\n')
 file_res.writelines('time of repeat experiments: {}'.format(args_input.iteration)+ '\n')
-avg_acc = np.mean(np.array(all_acc),axis=0)
 for i in range(len(avg_acc)):
 	tmp = 'Size of training set is ' + str(NUM_INIT_LB + i*NUM_QUERY) + ', ' + 'accuracy is ' + str(round(avg_acc[i],4)) + '.' + '\n'
 	file_res.writelines(tmp)
