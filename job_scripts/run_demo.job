@@ -10,11 +10,10 @@
 
 module purge
 module load 2025
-module load Anaconda3/2025.06-1
 
-source activate deepAL
+cd ~/human-centered-ml
 
-python - <<'EOF'
+uv run python - <<'EOF'
 import torch
 print(f"CUDA available: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
@@ -24,7 +23,7 @@ EOF
 echo ""
 
 # Run the actual experiment
-python demo.py \
+uv run python demo.py \
       -a RandomSampling \
       -s 100 \
       -q 1000 \

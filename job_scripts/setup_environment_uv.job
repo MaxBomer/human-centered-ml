@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=SetupEnv_UV
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=02:00:00
+#SBATCH --output=./job_scripts/out/setup_env_uv_%A.out
+
+set -e
+
+echo "Starting environment setup with uv..."
+
+module purge
+module load 2025
+
+# Check if uv is available, if not install it
+if ! command -v uv &> /dev/null; then
+    echo "uv not found. Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+echo "uv version: $(uv --version)"
+
+cd ~/human-centered-ml
+
+# Sync dependencies (uv will create venv if needed)
+echo "Syncing dependencies..."
+uv sync
+
+# Verify installation
+echo "Verifying installation..."
+uv run python -c "import torch; print(f'Torch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"
+
+echo "Setup complete!"

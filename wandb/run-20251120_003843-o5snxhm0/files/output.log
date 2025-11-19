@@ -1,0 +1,39 @@
+MNIST
+RANDOM SEED 4666
+RandomSampling
+  0%|                                                                        | 0/20 [00:04<?, ?it/s]
+Traceback (most recent call last):
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1275, in _try_get_data
+    data = self._data_queue.get(timeout=timeout)
+  File "/Users/jmqcooper/.local/share/uv/python/cpython-3.10.19-macos-aarch64-none/lib/python3.10/multiprocessing/queues.py", line 113, in get
+    if not self._poll(timeout):
+  File "/Users/jmqcooper/.local/share/uv/python/cpython-3.10.19-macos-aarch64-none/lib/python3.10/multiprocessing/connection.py", line 257, in poll
+    return self._poll(timeout)
+  File "/Users/jmqcooper/.local/share/uv/python/cpython-3.10.19-macos-aarch64-none/lib/python3.10/multiprocessing/connection.py", line 424, in _poll
+    r = wait([self], timeout)
+  File "/Users/jmqcooper/.local/share/uv/python/cpython-3.10.19-macos-aarch64-none/lib/python3.10/multiprocessing/connection.py", line 931, in wait
+    ready = selector.select(timeout)
+  File "/Users/jmqcooper/.local/share/uv/python/cpython-3.10.19-macos-aarch64-none/lib/python3.10/selectors.py", line 416, in select
+    fd_event_list = self._selector.poll(timeout)
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/lib/python3.10/site-packages/torch/utils/data/_utils/signal_handling.py", line 73, in handler
+    _error_if_any_worker_fails()
+RuntimeError: DataLoader worker (pid 51115) exited unexpectedly with exit code 1. Details are lost due to multiprocessing. Rerunning with num_workers=0 may give better error trace.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/demo.py", line 131, in <module>
+    strategy.train(wandb_log_callback=wandb_callback_0)
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/query_strategies/strategy.py", line 54, in train
+    self.net.train(labeled_data, wandb_log_callback=wandb_log_callback)
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/nets.py", line 38, in train
+    for batch_idx, (x, y, idxs) in enumerate(loader):
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 732, in __next__
+    data = self._next_data()
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1482, in _next_data
+    idx, data = self._get_data()
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1444, in _get_data
+    success, data = self._try_get_data()
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 1288, in _try_get_data
+    raise RuntimeError(
+RuntimeError: DataLoader worker (pid(s) 51115) exited unexpectedly

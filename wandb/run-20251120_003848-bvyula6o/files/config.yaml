@@ -1,0 +1,100 @@
+_wandb:
+    value:
+        cli_version: 0.23.0
+        e:
+            d9g509b57hqen0ttz9kf5a50c2bzzm0m:
+                apple:
+                    ecpuCores: 4
+                    gpuCores: 20
+                    memoryGb: 24
+                    name: Apple M4 Pro
+                    pcpuCores: 10
+                    ramTotalBytes: "25769803776"
+                    swapTotalBytes: "6442450944"
+                args:
+                    - -a
+                    - RandomSampling
+                    - -s
+                    - "500"
+                    - -q
+                    - "10000"
+                    - -b
+                    - "250"
+                    - -d
+                    - MNIST
+                    - --seed
+                    - "4666"
+                    - -t
+                    - "1"
+                    - -g
+                    - "0"
+                    - --input_noise_type
+                    - gaussian
+                    - --input_noise_fraction
+                    - "0.2"
+                    - --input_noise_strength
+                    - "0.1"
+                    - --input_noise_seed
+                    - "4666"
+                cpu_count: 14
+                cpu_count_logical: 14
+                disk:
+                    /:
+                        total: "994662584320"
+                        used: "162948730880"
+                email: mike.cooper@student.uva.nl
+                executable: /Users/jmqcooper/Documents/Development/human-centered-ml/.venv/bin/python3
+                git:
+                    commit: 48276809d94df5db61abe956b4148a21031c8a22
+                    remote: https://github.com/MaxBomer/human-centered-ml.git
+                host: Mikes-MacBook-Pro.local
+                memory:
+                    total: "25769803776"
+                os: macOS-26.1-arm64-arm-64bit
+                program: <python with no main file>
+                python: CPython 3.10.19
+                root: /Users/jmqcooper/Documents/Development/human-centered-ml
+                startedAt: "2025-11-19T23:38:48.185334Z"
+                writerId: d9g509b57hqen0ttz9kf5a50c2bzzm0m
+        m: []
+        python_version: 3.10.19
+        t:
+            "1":
+                - 1
+                - 5
+                - 41
+                - 53
+            "2":
+                - 1
+                - 5
+                - 41
+                - 53
+            "3":
+                - 13
+                - 16
+            "4": 3.10.19
+            "5": 0.23.0
+            "10":
+                - 20
+            "12": 0.23.0
+            "13": darwin-arm64
+batch_size:
+    value: 250
+dataset:
+    value: MNIST
+init_labeled:
+    value: 500
+noise_fraction:
+    value: 0.2
+noise_strength:
+    value: 0.1
+noise_type:
+    value: gaussian
+num_rounds:
+    value: 40
+quota:
+    value: 10000
+seed:
+    value: 4666
+strategy:
+    value: RandomSampling

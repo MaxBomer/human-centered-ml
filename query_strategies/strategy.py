@@ -45,14 +45,15 @@ class Strategy:
     def train(
         self,
         data: DataLoader | None = None,
-        model_name: str | None = None
+        model_name: str | None = None,
+        wandb_log_callback: Any | None = None
     ) -> None:
         if model_name is None:
             if data is None:
                 labeled_idxs, labeled_data = self.dataset.get_labeled_data()
-                self.net.train(labeled_data)
+                self.net.train(labeled_data, wandb_log_callback=wandb_log_callback)
             else:
-                self.net.train(data)
+                self.net.train(data, wandb_log_callback=wandb_log_callback)
         else:
             if model_name == 'WAAL':
                 labeled_idxs, labeled_data = self.dataset.get_labeled_data()
