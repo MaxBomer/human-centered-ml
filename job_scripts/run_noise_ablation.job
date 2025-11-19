@@ -10,7 +10,9 @@
 
 module purge
 module load 2025
+module load Anaconda3/2025.06-1
 
+source activate deepAL
 cd ~/human-centered-ml
 
 DATASETS=("MNIST" "CIFAR10")
@@ -33,7 +35,7 @@ for DATASET in "${DATASETS[@]}"; do
         for NOISE_TYPE in "${NOISE_TYPES[@]}"; do
             for NOISE_FRAC in "${NOISE_FRACTIONS[@]}"; do
                 echo "Dataset=${DATASET} Strategy=${STRATEGY} NoiseType=${NOISE_TYPE} NoiseFraction=${NOISE_FRAC}"
-                uv run python demo.py \
+                python demo.py \
                     -a "${STRATEGY}" \
                     -s "${INIT}" \
                     -q "${QUOTA}" \
