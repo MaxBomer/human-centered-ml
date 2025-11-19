@@ -15,9 +15,9 @@ module load Anaconda3/2025.06-1
 source activate deepAL
 
 DATASETS=("MNIST" "CIFAR10")
-STRATEGIES=("RandomSampling" "EntropySampling" "KCenterGreedy")
-NOISE_TYPES=("none" "gaussian" "uniform" "poisson")
-NOISE_FRACTIONS=(0.0 0.2 0.4 0.6 0.8)
+STRATEGIES=("RandomSampling" "EntropySampling")
+NOISE_TYPES=("gaussian" "uniform" "poisson")
+NOISE_FRACTIONS=(0.2 0.4 0.6 0.8)
 
 for DATASET in "${DATASETS[@]}"; do
     if [ "${DATASET}" = "MNIST" ]; then
@@ -51,5 +51,3 @@ for DATASET in "${DATASETS[@]}"; do
         done
     done
 done
-
-
