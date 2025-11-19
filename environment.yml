@@ -20,14 +20,14 @@ dependencies:
   - faiss-gpu>=1.7.2
   - openml=0.12.2
   - tensorboardx=2.2
-  - spacy=2.3.5
   - cython-blis>=0.7.7
   - thinc>=7.4.5
   - requests
   - ipdb>=0.13.9
-  - opencv-python>=4.5.5
   - wilds>=2.0.0
-  - toma>=1.1.0
   - wandb>=0.13.0
   - pip:
       - apex==0.1
+      - opencv-python>=4.5.5
+      - toma>=1.1.0
+      - spacy>=3.0
