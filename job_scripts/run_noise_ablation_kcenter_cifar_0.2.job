@@ -1,0 +1,42 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_a100
+#SBATCH --gpus=1
+#SBATCH --job-name=NoiseAblation_KCenter_CIFAR_0.2
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=48:00:00
+#SBATCH --output=./job_scripts/out/run_noise_ablation_kcenter_cifar_0.2_%A.out
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+source activate deepAL
+
+DATASET="CIFAR10"
+STRATEGY="KCenterGreedy"
+NOISE_TYPES=("gaussian" "uniform" "poisson")
+NOISE_FRAC=0.2
+
+INIT=1000
+QUOTA=40000
+BATCH=500
+
+for NOISE_TYPE in "${NOISE_TYPES[@]}"; do
+    echo "Dataset=${DATASET} Strategy=${STRATEGY} NoiseType=${NOISE_TYPE} NoiseFraction=${NOISE_FRAC}"
+    python demo.py \
+        -a "${STRATEGY}" \
+        -s "${INIT}" \
+        -q "${QUOTA}" \
+        -b "${BATCH}" \
+        -d "${DATASET}" \
+        --seed 4666 \
+        -t 3 \
+        -g 0 \
+        --input_noise_type "${NOISE_TYPE}" \
+        --input_noise_fraction "${NOISE_FRAC}" \
+        --input_noise_strength 0.1 \
+        --input_noise_seed 4666
+done
+
