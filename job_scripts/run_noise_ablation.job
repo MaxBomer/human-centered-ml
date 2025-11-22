@@ -10,10 +10,21 @@
 
 module purge
 module load 2025
-module load Anaconda3/2025.06-1
 
-source activate deepAL
-cd ~/human-centered-ml
+cd $HOME/human-centered-ml
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+uv sync --locked
+
+uv run python - <<'EOF'
+import torch
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"GPU device count: {torch.cuda.device_count()}")
+    print(f"Active GPU: {torch.cuda.get_device_name(0)}")
+EOF
+echo ""
+
 
 DATASETS=("MNIST" "CIFAR10")
 STRATEGIES=("RandomSampling" "EntropySampling")
@@ -35,7 +46,7 @@ for DATASET in "${DATASETS[@]}"; do
         for NOISE_TYPE in "${NOISE_TYPES[@]}"; do
             for NOISE_FRAC in "${NOISE_FRACTIONS[@]}"; do
                 echo "Dataset=${DATASET} Strategy=${STRATEGY} NoiseType=${NOISE_TYPE} NoiseFraction=${NOISE_FRAC}"
-                python demo.py \
+                uv run python demo.py \
                     -a "${STRATEGY}" \
                     -s "${INIT}" \
                     -q "${QUOTA}" \
