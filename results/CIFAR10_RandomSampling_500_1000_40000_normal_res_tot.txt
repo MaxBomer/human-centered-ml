@@ -6,8 +6,8 @@ number of testing pool: 10000
 batch size: 500
 quota: 40000
 time of repeat experiments: 3
-0: 0.764
-1: 0.77
-2: 0.768
-mean acc: 0.7673. std dev acc: 0.0025
-mean time: 4758.3333. std dev acc: 1.6997
+0: 0.763
+1: 0.78
+2: 0.778
+mean acc: 0.7737. std dev acc: 0.0076
+mean time: 4756.3333. std dev acc: 0.4714
