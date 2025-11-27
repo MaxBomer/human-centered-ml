@@ -1,8 +1,15 @@
 """Utilities for Weights & Biases logging in deep active learning experiments."""
 from __future__ import annotations
 
+import os
 import wandb
 from typing import Any, Callable, Optional
+
+try:
+    from dotenv import load_dotenv
+    _HAS_DOTENV = True
+except ImportError:
+    _HAS_DOTENV = False
 
 
 def initialize_wandb_run(
@@ -14,6 +21,8 @@ def initialize_wandb_run(
 ) -> Optional[wandb.run]:
     """
     Initialize a W&B run with the given configuration.
+    
+    Automatically loads WANDB_API_KEY from .env file if present.
     
     Args:
         use_wandb: Whether to enable W&B logging.
@@ -27,6 +36,10 @@ def initialize_wandb_run(
     """
     if not use_wandb:
         return None
+    
+    # Load .env file for WANDB_API_KEY if dotenv is available
+    if _HAS_DOTENV:
+        load_dotenv()
     
     try:
         run = wandb.init(

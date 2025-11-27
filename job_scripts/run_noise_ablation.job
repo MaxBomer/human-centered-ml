@@ -16,6 +16,11 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 uv sync --locked
 
+# Load environment variables from .env if present (for W&B API key)
+if [ -f "$HOME/human-centered-ml/.env" ]; then
+    export $(grep -v '^#' "$HOME/human-centered-ml/.env" | xargs)
+fi
+
 uv run python - <<'EOF'
 import torch
 print(f"CUDA available: {torch.cuda.is_available()}")

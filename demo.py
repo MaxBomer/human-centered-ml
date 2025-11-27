@@ -15,6 +15,7 @@ import re
 import random
 import math
 import datetime
+import json
 
 import arguments
 from parameters import *
@@ -40,6 +41,11 @@ if __name__ == '__main__':
 			'seed': args_input.input_noise_seed
 		}
 
+	# Build noise suffix for filenames
+	if noise_cfg is not None:
+		noise_suffix = f"{noise_cfg['type']}_{noise_cfg['fraction']}"
+	else:
+		noise_suffix = "normal"
 
 	SEED: int = args_input.seed  # type: ignore[assignment]  # Override final for runtime
 	os.environ['TORCH_HOME']='./basicmodel'
@@ -59,10 +65,15 @@ if __name__ == '__main__':
 	os.makedirs(os.path.abspath('') + '/logfile', exist_ok=True)
 
 	#recording
-	sys.stdout = Logger(os.path.abspath('') + '/logfile/' + DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_normal_log.txt')
+	sys.stdout = Logger(os.path.abspath('') + '/logfile/' + DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_' + noise_suffix + '_log.txt')
 	warnings.filterwarnings('ignore')
 
 	# Initialize W&B
+	# Use actual clamped values from noise_cfg if present, otherwise use args values
+	actual_noise_type = noise_cfg['type'] if noise_cfg is not None else args_input.input_noise_type
+	actual_noise_fraction = noise_cfg['fraction'] if noise_cfg is not None else 0.0
+	actual_noise_strength = noise_cfg['strength'] if noise_cfg is not None else args_input.input_noise_strength
+	
 	run_config = {
 		'dataset': DATA_NAME,
 		'strategy': STRATEGY_NAME,
@@ -71,11 +82,11 @@ if __name__ == '__main__':
 		'quota': args_input.quota,
 		'num_rounds': NUM_ROUND,
 		'seed': SEED,
-		'noise_type': args_input.input_noise_type,
-		'noise_fraction': args_input.input_noise_fraction,
-		'noise_strength': args_input.input_noise_strength,
+		'noise_type': actual_noise_type,
+		'noise_fraction': actual_noise_fraction,
+		'noise_strength': actual_noise_strength,
 	}
-	run_name = f'{DATA_NAME}_{STRATEGY_NAME}_noise_{args_input.input_noise_type}_{args_input.input_noise_fraction}_iter'
+	run_name = f'{DATA_NAME}_{STRATEGY_NAME}_{noise_suffix}'
 	wandb_run = initialize_wandb_run(
 		use_wandb=args_input.use_wandb,
 		project=args_input.wandb_project,
@@ -190,7 +201,7 @@ if __name__ == '__main__':
 		
 	# cal mean & standard deviation
 	acc_m = []
-	file_name_res_tot = DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_normal_res_tot.txt'
+	file_name_res_tot = DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_' + noise_suffix + '_res_tot.txt'
 	file_res_tot =  open(os.path.join(os.path.abspath('') + '/results', '%s' % file_name_res_tot),'w')
 
 	file_res_tot.writelines('dataset: {}'.format(DATA_NAME) + '\n')
@@ -201,6 +212,10 @@ if __name__ == '__main__':
 	file_res_tot.writelines('batch size: {}'.format(NUM_QUERY) + '\n')
 	file_res_tot.writelines('quota: {}'.format(NUM_ROUND*NUM_QUERY)+ '\n')
 	file_res_tot.writelines('time of repeat experiments: {}'.format(args_input.iteration)+ '\n')
+	file_res_tot.writelines('noise_type: {}'.format(actual_noise_type) + '\n')
+	file_res_tot.writelines('noise_fraction: {}'.format(actual_noise_fraction) + '\n')
+	file_res_tot.writelines('noise_strength: {}'.format(actual_noise_strength) + '\n')
+	file_res_tot.writelines('seed: {}'.format(SEED) + '\n')
 
 	# result
 	for i in range(len(all_acc)):
@@ -216,8 +231,10 @@ if __name__ == '__main__':
 	file_res_tot.writelines('mean acc: '+str(mean_acc)+'. std dev acc: '+str(stddev_acc)+'\n')
 	file_res_tot.writelines('mean time: '+str(mean_time)+'. std dev acc: '+str(stddev_time)+'\n')
 
-	# Compute average accuracy curve for logging
-	avg_acc = np.mean(np.array(all_acc), axis=0)
+	# Compute average and std dev accuracy curves for logging
+	all_acc_array = np.array(all_acc)
+	avg_acc = np.mean(all_acc_array, axis=0)
+	std_acc = np.std(all_acc_array, axis=0)
 
 	# Log summary to W&B
 	summary = {
@@ -232,7 +249,7 @@ if __name__ == '__main__':
 
 	# save result
 
-	file_name_res = DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_normal_res.txt'
+	file_name_res = DATA_NAME+ '_'  + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) +  '_' + str(args_input.quota) + '_' + noise_suffix + '_res.txt'
 	file_res =  open(os.path.join(os.path.abspath('') + '/results', '%s' % file_name_res),'w')
 
 
@@ -244,9 +261,41 @@ if __name__ == '__main__':
 	file_res.writelines('batch size: {}'.format(NUM_QUERY) + '\n')
 	file_res.writelines('quota: {}'.format(NUM_ROUND*NUM_QUERY)+ '\n')
 	file_res.writelines('time of repeat experiments: {}'.format(args_input.iteration)+ '\n')
+	file_res.writelines('noise_type: {}'.format(actual_noise_type) + '\n')
+	file_res.writelines('noise_fraction: {}'.format(actual_noise_fraction) + '\n')
+	file_res.writelines('noise_strength: {}'.format(actual_noise_strength) + '\n')
+	file_res.writelines('seed: {}'.format(SEED) + '\n')
 	for i in range(len(avg_acc)):
-		tmp = 'Size of training set is ' + str(NUM_INIT_LB + i*NUM_QUERY) + ', ' + 'accuracy is ' + str(round(avg_acc[i],4)) + '.' + '\n'
+		tmp = 'Size of training set is ' + str(NUM_INIT_LB + i*NUM_QUERY) + ', accuracy is ' + str(round(avg_acc[i],4)) + ', std is ' + str(round(std_acc[i],4)) + '.\n'
 		file_res.writelines(tmp)
 
 	file_res.close()
 	file_res_tot.close()
+
+	# Save raw iteration data to JSON for flexible plotting
+	file_name_raw = DATA_NAME + '_' + STRATEGY_NAME + '_' + str(NUM_QUERY) + '_' + str(NUM_INIT_LB) + '_' + str(args_input.quota) + '_' + noise_suffix + '_raw.json'
+	raw_data = {
+		'config': {
+			'dataset': DATA_NAME,
+			'strategy': STRATEGY_NAME,
+			'batch_size': NUM_QUERY,
+			'init_labeled': NUM_INIT_LB,
+			'quota': args_input.quota,
+			'num_rounds': NUM_ROUND,
+			'iterations': args_input.iteration,
+			'seed': SEED,
+			'noise_type': actual_noise_type,
+			'noise_fraction': actual_noise_fraction,
+			'noise_strength': actual_noise_strength,
+		},
+		'training_sizes': [NUM_INIT_LB + i * NUM_QUERY for i in range(len(avg_acc))],
+		'iterations': [acc.tolist() for acc in all_acc],
+		'mean_accuracy': avg_acc.tolist(),
+		'std_accuracy': std_acc.tolist(),
+		'aubc_per_iteration': acc_m,
+		'mean_aubc': mean_acc,
+		'std_aubc': stddev_acc,
+		'acquisition_times': acq_time,
+	}
+	with open(os.path.join(os.path.abspath('') + '/results', file_name_raw), 'w') as f:
+		json.dump(raw_data, f, indent=2)
