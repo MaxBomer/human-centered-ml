@@ -5,15 +5,17 @@
 #SBATCH --job-name=NoiseAblation_KCenter_CIFAR_0.8
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
-#SBATCH --time=48:00:00
+#SBATCH --time=60:00:00
 #SBATCH --output=./job_scripts/out/run_noise_ablation_kcenter_cifar_0.8_%A.out
 
 module purge
 module load 2025
 
 cd $HOME/human-centered-ml
-curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
+if ! command -v uv &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
 uv sync --locked
 
 # Load environment variables from .env if present (for W&B API key)
