@@ -1,0 +1,49 @@
+dataset: CIFAR10
+AL strategy: KCenterGreedy
+number of labeled pool: 1000
+number of unlabeled pool: 49000
+number of testing pool: 10000
+batch size: 250
+quota: 10000
+time of repeat experiments: 1
+Size of training set is 1000, accuracy is 0.4416.
+Size of training set is 1250, accuracy is 0.4873.
+Size of training set is 1500, accuracy is 0.5342.
+Size of training set is 1750, accuracy is 0.5481.
+Size of training set is 2000, accuracy is 0.5407.
+Size of training set is 2250, accuracy is 0.5511.
+Size of training set is 2500, accuracy is 0.585.
+Size of training set is 2750, accuracy is 0.5987.
+Size of training set is 3000, accuracy is 0.5996.
+Size of training set is 3250, accuracy is 0.6184.
+Size of training set is 3500, accuracy is 0.6351.
+Size of training set is 3750, accuracy is 0.6563.
+Size of training set is 4000, accuracy is 0.6319.
+Size of training set is 4250, accuracy is 0.6558.
+Size of training set is 4500, accuracy is 0.6561.
+Size of training set is 4750, accuracy is 0.6535.
+Size of training set is 5000, accuracy is 0.6693.
+Size of training set is 5250, accuracy is 0.6552.
+Size of training set is 5500, accuracy is 0.6979.
+Size of training set is 5750, accuracy is 0.6836.
+Size of training set is 6000, accuracy is 0.6946.
+Size of training set is 6250, accuracy is 0.7054.
+Size of training set is 6500, accuracy is 0.7039.
+Size of training set is 6750, accuracy is 0.7228.
+Size of training set is 7000, accuracy is 0.7567.
+Size of training set is 7250, accuracy is 0.7309.
+Size of training set is 7500, accuracy is 0.7426.
+Size of training set is 7750, accuracy is 0.7385.
+Size of training set is 8000, accuracy is 0.7407.
+Size of training set is 8250, accuracy is 0.7433.
+Size of training set is 8500, accuracy is 0.7684.
+Size of training set is 8750, accuracy is 0.7478.
+Size of training set is 9000, accuracy is 0.7634.
+Size of training set is 9250, accuracy is 0.7433.
+Size of training set is 9500, accuracy is 0.7752.
+Size of training set is 9750, accuracy is 0.7585.
+Size of training set is 10000, accuracy is 0.7698.
+Size of training set is 10250, accuracy is 0.7524.
+Size of training set is 10500, accuracy is 0.7779.
+Size of training set is 10750, accuracy is 0.7643.
+Size of training set is 11000, accuracy is 0.7877.

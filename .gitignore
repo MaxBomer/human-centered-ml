@@ -52,3 +52,11 @@ Thumbs.db
 # UV
 .uv/
 .python-version
+job_scripts/out/
+
+# logs
+logs/
+wandb/
+
+# Environment variables
+.env

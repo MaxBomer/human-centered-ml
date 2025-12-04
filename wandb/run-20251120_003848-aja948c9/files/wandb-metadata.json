@@ -1,0 +1,61 @@
+{
+  "os": "macOS-26.1-arm64-arm-64bit",
+  "python": "CPython 3.10.19",
+  "startedAt": "2025-11-19T23:38:48.188474Z",
+  "args": [
+    "-a",
+    "RandomSampling",
+    "-s",
+    "500",
+    "-q",
+    "10000",
+    "-b",
+    "250",
+    "-d",
+    "MNIST",
+    "--seed",
+    "4666",
+    "-t",
+    "1",
+    "-g",
+    "0",
+    "--input_noise_type",
+    "gaussian",
+    "--input_noise_fraction",
+    "0.2",
+    "--input_noise_strength",
+    "0.1",
+    "--input_noise_seed",
+    "4666"
+  ],
+  "program": "<python with no main file>",
+  "git": {
+    "remote": "https://github.com/MaxBomer/human-centered-ml.git",
+    "commit": "48276809d94df5db61abe956b4148a21031c8a22"
+  },
+  "email": "mike.cooper@student.uva.nl",
+  "root": "/Users/jmqcooper/Documents/Development/human-centered-ml",
+  "host": "Mikes-MacBook-Pro.local",
+  "executable": "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/bin/python3",
+  "cpu_count": 14,
+  "cpu_count_logical": 14,
+  "disk": {
+    "/": {
+      "total": "994662584320",
+      "used": "162948710400"
+    }
+  },
+  "memory": {
+    "total": "25769803776"
+  },
+  "apple": {
+    "name": "Apple M4 Pro",
+    "ecpuCores": 4,
+    "pcpuCores": 10,
+    "gpuCores": 20,
+    "memoryGb": 24,
+    "swapTotalBytes": "6442450944",
+    "ramTotalBytes": "25769803776"
+  },
+  "writerId": "0xck2gt37rb6qmt1l76jgngcy6b5hyos"
+}

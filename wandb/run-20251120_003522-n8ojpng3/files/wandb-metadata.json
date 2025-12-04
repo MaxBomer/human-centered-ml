@@ -1,0 +1,43 @@
+{
+  "os": "macOS-26.1-arm64-arm-64bit",
+  "python": "CPython 3.10.19",
+  "startedAt": "2025-11-19T23:35:22.338948Z",
+  "args": [
+    "-a",
+    "RandomSampling",
+    "-s",
+    "500",
+    "-q",
+    "10000",
+    "-b",
+    "250",
+    "-d",
+    "MNIST",
+    "--seed",
+    "4666",
+    "-t",
+    "1",
+    "-g",
+    "0",
+    "--input_noise_type",
+    "gaussian",
+    "--input_noise_fraction",
+    "0.2",
+    "--input_noise_strength",
+    "0.1",
+    "--input_noise_seed",
+    "4666"
+  ],
+  "program": "/Users/jmqcooper/Documents/Development/human-centered-ml/demo.py",
+  "codePath": "demo.py",
+  "codePathLocal": "demo.py",
+  "git": {
+    "remote": "https://github.com/MaxBomer/human-centered-ml.git",
+    "commit": "48276809d94df5db61abe956b4148a21031c8a22"
+  },
+  "email": "mike.cooper@student.uva.nl",
+  "root": "/Users/jmqcooper/Documents/Development/human-centered-ml",
+  "host": "Mikes-MacBook-Pro.local",
+  "executable": "/Users/jmqcooper/Documents/Development/human-centered-ml/.venv/bin/python3",
+  "writerId": "ogcp1ro69cviyfyg2pjaghc6q31qokc7"
+}

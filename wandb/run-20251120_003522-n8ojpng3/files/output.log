@@ -1,0 +1,7 @@
+MNIST
+RANDOM SEED 4666
+RandomSampling
+Traceback (most recent call last):
+  File "/Users/jmqcooper/Documents/Development/human-centered-ml/demo.py", line 131, in <module>
+    strategy.train(wandb_log_callback=wandb_callback_0)
+TypeError: Strategy.train() got an unexpected keyword argument 'wandb_log_callback'

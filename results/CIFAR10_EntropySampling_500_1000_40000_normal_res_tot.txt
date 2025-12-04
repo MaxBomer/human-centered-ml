@@ -1,0 +1,13 @@
+dataset: CIFAR10
+AL strategy: EntropySampling
+number of labeled pool: 1000
+number of unlabeled pool: 49000
+number of testing pool: 10000
+batch size: 500
+quota: 40000
+time of repeat experiments: 3
+0: 0.816
+1: 0.813
+2: 0.811
+mean acc: 0.8133. std dev acc: 0.0021
+mean time: 7092.3333. std dev acc: 22.2311

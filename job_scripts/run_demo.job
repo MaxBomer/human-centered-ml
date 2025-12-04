@@ -8,13 +8,21 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=./job_scripts/out/run_demo_%A.out
 
+
 module purge
 module load 2025
-module load Anaconda3/2025.06-1
 
-source activate deepAL
+cd $HOME/human-centered-ml
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+uv sync --locked
 
-python - <<'EOF'
+# Load environment variables from .env if present (for W&B API key)
+if [ -f "$HOME/human-centered-ml/.env" ]; then
+    export $(grep -v '^#' "$HOME/human-centered-ml/.env" | xargs)
+fi
+
+uv run python - <<'EOF'
 import torch
 print(f"CUDA available: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
@@ -23,23 +31,13 @@ if torch.cuda.is_available():
 EOF
 echo ""
 
-
-# MNIST
-#echo "MNIST: RandomSampling"
-#python demo.py -a RandomSampling -s 500 -q 10000 -b 250 -d MNIST --seed 4666 -t 3 -g 0
-#
-#echo "MNIST: EntropySampling"
-#python demo.py -a EntropySampling -s 500 -q 10000 -b 250 -d MNIST --seed 4666 -t 3 -g 0
-#
-#echo "MNIST: KCenterGreedy"
-#python demo.py -a KCenterGreedy -s 500 -q 10000 -b 250 -d MNIST --seed 4666 -t 3 -g 0
-#
-## CIFAR-10
-#echo "CIFAR10: RandomSampling"
-#python demo.py -a RandomSampling -s 1000 -q 40000 -b 500 -d CIFAR10 --seed 4666 -t 3 -g 0
-
-#echo "CIFAR10: EntropySampling"
-#python demo.py -a EntropySampling -s 1000 -q 40000 -b 500 -d CIFAR10 --seed 4666 -t 3 -g 0
-
-echo "CIFAR10: KCenterGreedy"
-python demo.py -a KCenterGreedy -s 1000 -q 40000 -b 500 -d CIFAR10 --seed 4666 -t 1 -g 0
+# Run the actual experiment
+uv run python demo.py \
+      -a RandomSampling \
+      -s 100 \
+      -q 1000 \
+      -b 100 \
+      -d MNIST \
+      --seed 4666 \
+      -t 3 \
+      -g 0
